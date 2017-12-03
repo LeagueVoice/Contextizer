@@ -26,7 +26,8 @@ Contextizer.prototype = {
     if (!this.graph[target])
       throw new Error(`Target "${target}" not found.`);
     let context = {};
-    this._traverse(target, (name, deps) => {
+    let ordering = this._traverse(target);
+    ordering.forEach(([ name, deps ]) => {
       let item = this.graph[name];
       switch(item.type) {
         case 'input':
@@ -46,8 +47,9 @@ Contextizer.prototype = {
           break;
       }
     });
+    ordering.reverse(); // In-place.
     let cleanup = () => {
-      this._traverseBackwards(target, (name, deps) => {
+      ordering.forEach(([ name, deps ]) => {
         let item = this.graph[name];
         if (!item.cleanup)
           return;
@@ -73,16 +75,30 @@ Contextizer.prototype = {
     item.deps.forEach((depName, i) => arg[depName] = context[deps[i]]);
     return arg;
   },
-  /* Post-order traversal. */
-  _traverse(target, func) {
-    let deps = this._deps(target);
-    deps.forEach(dep => this._traverse(dep, func));
-    func(target, deps);
-  },
-  _traverseBackwards(target, func) {
-    let deps = this._deps(target);
-    func(target, deps);
-    deps.forEach(dep => this._traverseBackwards(dep, func));
+  /* Topological sort, via post-order traversal. */
+  _traverse(target) {
+    let result = new Map();
+    let visited = new Set();
+    let path = new Set();
+    let visit = name => {
+      visited.add(name);
+      path.add(name);
+      let deps = this._deps(name);
+      deps.forEach(dep => {
+        if (!visited.has(dep))
+          visit(dep);
+        else if (path.has(dep)) {
+          let cycle = Array.from(path);
+          cycle.push(dep);
+          throw new Error('Dependency Cycle Found: ' + cycle.join(' -> '));
+        }
+      });
+      path.delete(name);
+      if (!result.has(name))
+        result.set(name, deps);
+    };
+    visit(target);
+    return Array.from(result.entries());
   },
   _deps(path) {
     let item = this.graph[path];

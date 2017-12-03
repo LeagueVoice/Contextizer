@@ -195,8 +195,57 @@ describe('Contextizer', function() {
       .then(done, done);
   });
 
+  it('test circular', function(done) {
+    let context = new Contextizer();
+    context.register('grass').asFunction({
+      deps: [ 'dirt' ],
+      func({ dirt }) {
+        return dirt + ' -> grass';
+      }
+    });
+    context.register('cow').asFunction({
+      deps: [ 'grass' ],
+      func({ grass }) {
+        return grass + ' -> cow';
+      }
+    });
+    context.register('pie').asFunction({
+      deps: [ 'cow' ],
+      func({ cow }) {
+        return cow + ' -> pie';
+      }
+    });
+    context.register('human').asFunction({
+      deps: [ 'pie' ],
+      func({ pie }) {
+        return pie + ' -> human. Yum!';
+      }
+    });
+    context.register('dirt').asFunction({
+      deps: [ 'pie' ],
+      func({ pie }) {
+        return pie + ' -> dirt';
+      }
+    });
+    try {
+      context.execute('human').then(v => done('unexpected value ' + v));
+    }
+    catch(e) {
+      expect(e.message).to
+        .equal('Dependency Cycle Found: human -> pie -> cow -> grass -> dirt -> pie');
+      done();
+    }
+  });
+
+  it('test namespace misc', function(done) {
+    let context = new Contextizer();
+    context.register('user').asInput();
+    context.register(); //TODO
+    done();
+  });
+
   for (let pct = 0.25; pct <= 1.0; pct += 0.25) {
-    let nodes = 12 + 12 * (1 - pct);
+    let nodes = 48 + 24 * (1 - pct);
     it(`test dense tree ${100 * pct}%, ${nodes} nodes`, function(done) {
       let vals = [];
       let context = new Contextizer();
