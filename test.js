@@ -194,4 +194,34 @@ describe('Contextizer', function() {
       })
       .then(done, done);
   });
+
+  for (let pct = 0.25; pct <= 1.0; pct += 0.25) {
+    let nodes = 12 + 12 * (1 - pct);
+    it(`test dense tree ${100 * pct}%, ${nodes} nodes`, function(done) {
+      let vals = [];
+      let context = new Contextizer();
+      for (let i = 0; i < nodes; i++) {
+        let deps = []; // Always required
+        vals[i] = i;
+        for (let j = 0; j < i; j++) {
+          if (Math.random() < pct || j === i - 1) {
+            vals[i] += vals[j];
+            deps.unshift(j);
+          }
+        }
+        deps = deps.map(dep => '' + dep); // Convert to string.
+        context.register('' + i).asFunction({
+          deps,
+          func(arg) {
+            return i + Object.values(arg).reduce((a, b) => a + b, 0);
+          }
+        });
+      }
+      context.execute('' + (nodes - 1))
+        .then(value => {
+          expect(value).to.equal(vals.pop());
+        })
+        .then(done, done);
+    });
+  }
 });
