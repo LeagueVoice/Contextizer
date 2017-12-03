@@ -4,7 +4,7 @@
   "description": "Context injector",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "./node_modules/.bin/mocha test.js"
   },
   "repository": {
     "type": "git",
@@ -17,9 +17,14 @@
     "ioc"
   ],
   "author": "Mingwei Samuel",
-  "license": "GPL-2.0",
+  "license": "MIT",
   "bugs": {
     "url": "https://github.com/LeagueVoice/Contextizer/issues"
   },
-  "homepage": "https://github.com/LeagueVoice/Contextizer#readme"
+  "homepage": "https://github.com/LeagueVoice/Contextizer#readme",
+  "dependencies": {},
+  "devDependencies": {
+    "chai": "^4.1.2",
+    "mocha": "^4.0.1"
+  }
 }
