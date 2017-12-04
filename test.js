@@ -237,6 +237,29 @@ describe('Contextizer', function() {
     }
   });
 
+  it('test fibonacci params', function(done) {
+    let context = new Contextizer();
+    context.register('fib').asFunction({
+      deps: [], // No dependencies.
+      func({ vals }) {
+        vals.push(vals[0] + vals[1]);
+        return vals.shift();
+      },
+      params: {
+        vals: [ 1, 1 ]
+      }
+    });
+    let promises = [];
+    for (let i = 0; i < 10; i++) {
+      promises.push(context.execute('fib'));
+    }
+    Promise.all(promises)
+      .then(values => {
+        expect(values).to.deep.equal([ 1, 1, 2, 3, 5, 8, 13, 21, 34, 55 ]);
+      })
+      .then(done, done);
+  });
+
   it('test namespace misc', function(done) {
     let context = new Contextizer();
     context.register('user').asInput();
