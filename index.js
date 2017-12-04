@@ -67,6 +67,9 @@ Contextizer.prototype = {
     context[target].then(cleanup, cleanup);
     return context[target];
   },
+  hasTarget(target) {
+    return !!this.graph[target];
+  },
   // PRIVATE HELPER METHODS
   _makeArg(context, item, deps) {
     let arg = {};
